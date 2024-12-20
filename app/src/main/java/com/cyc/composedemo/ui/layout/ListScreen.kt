@@ -37,6 +37,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +53,7 @@ import com.cyc.composedemo.R
 import com.cyc.composedemo.ui.theme.ComposeTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 var refreshCount = 0
@@ -62,9 +65,10 @@ fun ListScreen() {
         mutableStateOf<List<String>>(emptyList())
     }
     data.value = refresh()
-    val isRefreshing by remember {
+    var isRefreshing by remember {
         mutableStateOf(false)
     }
+    val scope = rememberCoroutineScope()
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val angle by infiniteTransition.animateFloat(
         initialValue = 0F,
@@ -76,7 +80,12 @@ fun ListScreen() {
 
     val refreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = {
-            data.value = refresh()
+            scope.launch {
+                isRefreshing = true
+                delay(2000) // 模拟数据加载
+                data.value = refresh()
+                isRefreshing = false
+            }
         })
     Box(
         modifier = Modifier
